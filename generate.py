@@ -106,13 +106,6 @@ class CrosswordCreator():
         """
         #iterate over variables of crossword
         
-        """for var in self.domains:
-            len_var = var.length
-
-            for value in self.domains[var]:
-                if len(value) != len_var:
-                    self.domains[var].remove(value) """
-        
         for variable in self.domains:
             len_var = variable.length
             to_remove = set()
@@ -170,20 +163,6 @@ class CrosswordCreator():
 
         self.domains[x] = self.domains[x] - remove_from_domain
         return revision
-
-        """
-        #status of revision variable
-        revision = False
-
-        #iterate over domains of x,y
-        for x_value in self.domains[x]:
-            for y_value in self.domains[y]:
-                if not self.check_overlap(x_value,  y_value, x, y) or x_value == y_value:
-                    #if it is inconsistent, a revision was mde
-                    self.domains[x].remove(x_value)
-                    revision = True
-
-        return revision"""
 
 
     def ac3(self, arcs=None):
@@ -266,8 +245,6 @@ class CrosswordCreator():
         #if no constraints violations found, return True 
         return True
         
-
-    ############ IMPLEMENT FULLY ################
     def order_domain_values(self, var, assignment):
         """
         Return a list of values in the domain of `var`, in order by
@@ -275,11 +252,24 @@ class CrosswordCreator():
         The first value in the list, for example, should be the one
         that rules out the fewest values among the neighbors of `var`.
         """
-        
-        #########CHANGE THIS ###############
-        return [x for x in self.domains[var]]
+        #initialize dict of values to rule out
+        removable_values = {value: 0 for value in self.domains[var]}
 
-    ############ IMPLEMENT FULLY ################
+        #iterate over domain of variable
+        for value in self.domains[var]:
+            #iterate over neighbor of var
+            for neighor in self.crossword.neighbors(var):
+                #iterate over domain of neighbor of var
+                for value_neighbor in self.domains[neighor]:
+                    #if arc var-neighbor is inconsistent, add one to removable variables
+                    if not self.check_overlap(value, value_neighbor, var, neighor):
+                        removable_values[value] += 1
+        
+        
+        #sort list and return it, taking as sorting key the value of the removable_values
+        return sorted([x for x in removable_values], key = lambda x: removable_values[x])
+
+
     def select_unassigned_variable(self, assignment):
         """
         Return an unassigned variable not already part of `assignment`.
@@ -288,10 +278,23 @@ class CrosswordCreator():
         degree. If there is a tie, any of the tied variables are acceptable
         return values.
         """
-        
-        #########CHANGE THIS ###############
+        #get variables that are not assingned and make a list of them
         non_assigned = set(self.domains.keys()) - set(assignment.keys())
-        return [var for var in non_assigned][0]
+        result = [variable for variable in non_assigned]
+
+        #sort variable accorindg to number of values in domain (RVH)
+        result = sorted(result, key = lambda x: (len(self.domains[x])))
+        #check if two variables have the same number of eleements in domain
+        domain_lengths = {var: len(self.domains[var]) for var in result}
+        for i in range(len(result)-1):
+            var1 = result[i]
+            var2 = result[i+1]
+            
+            if domain_lengths[var1] == domain_lengths[var2]:
+                #sort by higher degree euristic
+                sorted(result, key= lambda x: (-len(self.crossword.neighbors(x))))
+
+        return result[0]
 
     def backtrack(self, assignment):
         """

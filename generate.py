@@ -46,7 +46,7 @@ class CrosswordCreator():
                     print("█", end="")
             print()
 
-    """def save(self, assignment, filename):
+    def save(self, assignment, filename):
         
         #Save crossword assignment to an image file.
         
@@ -85,7 +85,7 @@ class CrosswordCreator():
                             letters[i][j], fill="black", font=font
                         )
 
-        img.save(filename)"""
+        img.save(filename)
 
     def solve(self):
         """
